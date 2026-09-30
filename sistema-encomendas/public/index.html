@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Encomendas & Clientes</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans pb-12">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <header class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="text-center md:text-left">
+        <h1 class="text-3xl font-bold text-indigo-600">Gestão de Encomendas</h1>
+        <p class="text-gray-500">Controle completo de pedidos, pagamentos e clientes</p>
+      </div>
+      <a href="/api/backup" download class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition shadow-sm flex items-center gap-2">
+        💾 Baixar Backup
+      </a>
+    </header>
+
+    <!-- MENU DE ABAS -->
+    <div class="flex justify-center space-x-4 mb-8">
+      <button onclick="mudarAba('encomendas')" id="btn-aba-encomendas" class="px-6 py-2 rounded-lg font-medium bg-indigo-600 text-white transition shadow-sm">
+        📦 Encomendas
+      </button>
+      <button onclick="mudarAba('clientes')" id="btn-aba-clientes" class="px-6 py-2 rounded-lg font-medium bg-white text-gray-600 border hover:bg-gray-100 transition shadow-sm">
+        👥 Clientes & Aniversários
+      </button>
+    </div>
+
+    <!-- ABA DE ENCOMENDAS -->
+    <div id="aba-encomendas" class="space-y-8">
+      
+      <!-- WIDGETS DE RESUMO -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Em Preparo / Pendentes</p>
+            <h3 id="widget-pendentes" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+          </div>
+          <div class="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">⏳</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Urgentes (Até 3 dias)</p>
+            <h3 id="widget-urgentes" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+          </div>
+          <div class="p-3 bg-rose-50 text-rose-600 rounded-xl text-xl">🚨</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Concluídas</p>
+            <h3 id="widget-concluidas" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+          </div>
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl text-xl">✅</div>
+        </div>
+      </div>
+
+      <!-- FORMULÁRIO DE ENCOMENDA -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Nova Encomenda</h2>
+        <form id="form-encomenda" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Cliente</label>
+              <select id="enc-cliente" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Selecione um cliente...</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Status de Pagamento</label>
+              <select id="enc-pagamento" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="Pendente">Pendente</option>
+                <option value="Sinal Pago">Sinal Pago</option>
+                <option value="Pago Total">Pago Total</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ITENS E CATEGORIAS -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-medium text-gray-600">Produtos da Encomenda</label>
+              <button type="button" onclick="adicionarCampoProduto()" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-100 font-medium">+ Adicionar Outro Produto</button>
+            </div>
+            <div id="container-produtos" class="space-y-3"></div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Data de Entrada</label>
+              <input type="date" id="enc-entrada" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-600">Data de Entrega (Prazo)</label>
+              <input type="date" id="enc-entrega" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 text-white py-2 rounded-lg font-medium hover:bg-emerald-700 transition mt-4">Registrar Encomenda</button>
+        </form>
+      </div>
+
+      <!-- PAINEL DE ENCOMENDAS COM PESQUISA -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+          <h2 class="text-xl font-semibold text-gray-700">Painel de Encomendas</h2>
+          <input type="text" id="filtro-encomendas" placeholder="🔍 Pesquisar por cliente ou produto..." oninput="carregarDados()" class="w-full md:w-80 p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
+                <th class="p-3">Status</th>
+                <th class="p-3">Cliente</th>
+                <th class="p-3">WhatsApp / Msg</th>
+                <th class="p-3">Produtos / Detalhes</th>
+                <th class="p-3">Pagamento</th>
+                <th class="p-3">Entrada / Entrega</th>
+                <th class="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-encomendas" class="divide-y text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA DE CLIENTES -->
+    <div id="aba-clientes" class="hidden space-y-8">
+      
+      <!-- ALERTA DE ANIVERSARIANTES DO MÊS -->
+      <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-6 rounded-xl shadow-sm">
+        <h3 class="text-lg font-bold mb-1">🎂 Aniversariantes deste Mês</h3>
+        <p id="lista-aniversariantes-mes" class="text-sm opacity-90">Nenhum aniversariante cadastrado para este mês.</p>
+      </div>
+
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h2 class="text-xl font-semibold mb-4 text-gray-700">Cadastrar Novo Cliente</h2>
+        <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-600">Nome do Cliente</label>
+            <input type="text" id="cli-nome" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600">WhatsApp</label>
+            <input type="text" id="cli-whats" placeholder="(00) 00000-0000" required class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-600">Nascimento (Opcional)</label>
+            <input type="date" id="cli-nasc" class="w-full mt-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div class="md:col-span-3">
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition">Salvar Cliente</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- LISTA DE CLIENTES COM PESQUISA -->
+      <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+          <h2 class="text-xl font-semibold text-gray-700">Clientes Cadastrados</h2>
+          <input type="text" id="filtro-clientes" placeholder="🔍 Pesquisar cliente..." oninput="carregarDados()" class="w-full md:w-80 p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
+                <th class="p-3">Nome</th>
+                <th class="p-3">WhatsApp</th>
+                <th class="p-3">Aniversário</th>
+                <th class="p-3 text-center">Histórico & Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-clientes" class="divide-y text-sm"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE HISTÓRICO DO CLIENTE -->
+  <div id="modal-historico" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 id="modal-titulo-cliente" class="text-lg font-bold text-gray-800">Histórico de Compras</h3>
+        <button onclick="fecharHistorico()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+      </div>
+      <div id="modal-conteudo-historico" class="space-y-3 max-h-96 overflow-y-auto"></div>
+      <button onclick="fecharHistorico()" class="w-full bg-gray-100 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('Erro PWA: ', err));
+      });
+    }
+
+    let clientesGlobal = [];
+    let encomendasGlobal = [];
+
+    function mudarAba(aba) {
+      const divEncomendas = document.getElementById('aba-encomendas');
+      const divClientes = document.getElementById('aba-clientes');
+      const btnEncomendas = document.getElementById('btn-aba-encomendas');
+      const btnClientes = document.getElementById('btn-aba-clientes');
+
+      if (aba === 'encomendas') {
+        divEncomendas.classList.remove('hidden');
+        divClientes.classList.add('hidden');
+        btnEncomendas.className = "px-6 py-2 rounded-lg font-medium bg-indigo-600 text-white transition shadow-sm";
+        btnClientes.className = "px-6 py-2 rounded-lg font-medium bg-white text-gray-600 border hover:bg-gray-100 transition shadow-sm";
+      } else {
+        divClientes.classList.remove('hidden');
+        divEncomendas.classList.add('hidden');
+        btnClientes.className = "px-6 py-2 rounded-lg font-medium bg-indigo-600 text-white transition shadow-sm";
+        btnEncomendas.className = "px-6 py-2 rounded-lg font-medium bg-white text-gray-600 border hover:bg-gray-100 transition shadow-sm";
+      }
+    }
+
+    function adicionarCampoProduto(produtoVal = '', qtdVal = 1, catVal = 'Photocard', obsVal = '') {
+      const container = document.getElementById('container-produtos');
+      const div = document.createElement('div');
+      div.className = "p-3 border rounded-lg bg-gray-50 space-y-2 produto-item";
+      div.innerHTML = `
+        <div class="flex flex-col md:flex-row gap-2 items-center">
+          <select class="w-full md:w-36 p-2 bg-white border rounded-lg text-sm prod-cat">
+            <option value="Photocard" ${catVal==='Photocard'?'selected':''}>Photocard</option>
+            <option value="Laço" ${catVal==='Laço'?'selected':''}>Laço</option>
+            <option value="Ecobag" ${catVal==='Ecobag'?'selected':''}>Ecobag</option>
+            <option value="Papelaria" ${catVal==='Papelaria'?'selected':''}>Papelaria</option>
+            <option value="Outros" ${catVal==='Outros'?'selected':''}>Outros</option>
+          </select>
+          <input type="text" placeholder="Nome do produto..." value="${produtoVal}" required class="flex-1 w-full p-2 bg-white border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm prod-nome">
+          <input type="number" min="1" value="${qtdVal}" required class="w-full md:w-20 p-2 bg-white border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm prod-qtd" title="Qtd">
+          <button type="button" onclick="this.closest('.produto-item').remove()" class="text-red-500 hover:text-red-700 p-2 text-sm font-bold">✕</button>
+        </div>
+        <input type="text" placeholder="Observações/Detalhes de personalização..." value="${obsVal}" class="w-full p-2 bg-white border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-xs prod-obs">
+      `;
+      container.appendChild(div);
+    }
+
+    window.onload = () => {
+      adicionarCampoProduto();
+      carregarDados();
+    };
+
+    async function carregarDados() {
+      const resCli = await fetch('/api/clientes');
+      clientesGlobal = await resCli.json();
+      
+      const selectCli = document.getElementById('enc-cliente');
+      selectCli.innerHTML = '<option value="">Selecione um cliente...</option>';
+      clientesGlobal.forEach(c => {
+        selectCli.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+      });
+
+      const mesAtual = new Date().getMonth() + 1;
+      const aniversariantes = clientesGlobal.filter(c => {
+        if (!c.aniversario) return false;
+        const mesAniversario = parseInt(c.aniversario.split('-')[1]);
+        return mesAniversario === mesAtual;
+      });
+
+      const avisoAniver = document.getElementById('lista-aniversariantes-mes');
+      if (aniversariantes.length > 0) {
+        avisoAniver.innerHTML = aniversariantes.map(c => `🎉 <strong>${c.nome}</strong> (${c.aniversario.split('-').reverse().join('/')})`).join(' | ');
+      } else {
+        avisoAniver.innerHTML = "Nenhum aniversariante cadastrado para este mês.";
+      }
+
+      const termoCliente = document.getElementById('filtro-clientes').value.toLowerCase();
+      const clientesFiltrados = clientesGlobal.filter(c => c.nome.toLowerCase().includes(termoCliente));
+
+      const tbodyClientes = document.getElementById('lista-clientes');
+      tbodyClientes.innerHTML = '';
+      if (clientesFiltrados.length === 0) {
+        tbodyClientes.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400">Nenhum cliente encontrado.</td></tr>`;
+      } else {
+        clientesFiltrados.forEach(c => {
+          const nascFormatada = c.aniversario ? c.aniversario.split('-').reverse().join('/') : '-';
+          tbodyClientes.innerHTML += `
+            <tr class="hover:bg-gray-50 transition">
+              <td class="p-3 font-medium text-gray-900">${c.nome}</td>
+              <td class="p-3"><a href="https://wa.me/55${c.whatsapp.replace(/\D/g,'')}" target="_blank" class="text-emerald-600 hover:underline">${c.whatsapp}</a></td>
+              <td class="p-3 text-gray-500">${nascFormatada}</td>
+              <td class="p-3 text-center space-x-2">
+                <button onclick="abrirHistorico('${c.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs bg-indigo-50 px-2 py-1 rounded">Ver Histórico</button>
+                <button onclick="deletarCliente('${c.id}')" class="text-red-500 hover:text-red-700 text-xs bg-red-50 px-2 py-1 rounded">Excluir</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      const resEnc = await fetch('/api/encomendas');
+      encomendasGlobal = await resEnc.json();
+      encomendasGlobal.sort((a, b) => new Date(a.dataEntrega) - new Date(b.dataEntrega));
+
+      let totalPendentes = 0, totalUrgentes = 0, totalConcluidas = 0;
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
+      encomendasGlobal.forEach(enc => {
+        if (enc.concluida) {
+          totalConcluidas++;
+        } else {
+          totalPendentes++;
+          const dataEntrega = new Date(enc.dataEntrega + 'T00:00:00');
+          const diffDias = Math.ceil((dataEntrega - hoje) / (1000 * 60 * 60 * 24));
+          if (diffDias <= 3) totalUrgentes++;
+        }
+      });
+
+      document.getElementById('widget-pendentes').innerText = totalPendentes;
+      document.getElementById('widget-urgentes').innerText = totalUrgentes;
+      document.getElementById('widget-concluidas').innerText = totalConcluidas;
+
+      const termoEnc = document.getElementById('filtro-encomendas').value.toLowerCase();
+      const encomendasFiltradas = encomendasGlobal.filter(enc => {
+        const cliente = clientesGlobal.find(c => c.id === enc.clienteId) || { nome: '' };
+        const matchCliente = cliente.nome.toLowerCase().includes(termoEnc);
+        const matchProduto = enc.itens && enc.itens.some(i => i.produto.toLowerCase().includes(termoEnc));
+        return matchCliente || matchProduto;
+      });
+
+      const tbodyEncomendas = document.getElementById('lista-encomendas');
+      tbodyEncomendas.innerHTML = '';
+
+      if (encomendasFiltradas.length === 0) {
+        tbodyEncomendas.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-400">Nenhuma encomenda encontrada.</td></tr>`;
+        return;
+      }
+
+      encomendasFiltradas.forEach(enc => {
+        const cliente = clientesGlobal.find(c => c.id === enc.clienteId) || { nome: 'Desconhecido', whatsapp: '' };
+        const whatsLimpo = cliente.whatsapp.replace(/\D/g,'');
+        const msgWhats = encodeURIComponent(`Olá ${cliente.nome}! Passando para atualizar sobre a sua encomenda. ✨`);
+        
+        let listaProdutosHtml = '';
+        if (enc.itens && enc.itens.length > 0) {
+          listaProdutosHtml = enc.itens.map(item => `
+            <div class="mb-1">
+              <span class="text-[10px] uppercase font-bold bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded mr-1">${item.categoria || 'Geral'}</span>
+              <strong>${item.produto}</strong> <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">x${item.quantidade}</span>
+              ${item.obs ? `<div class="text-xs text-gray-500 italic ml-2">Obs: ${item.obs}</div>` : ''}
+            </div>
+          `).join('');
+        }
+
+        let corPag = "bg-amber-50 text-amber-700";
+        if (enc.statusPagamento === 'Sinal Pago') corPag = "bg-blue-50 text-blue-700";
+        if (enc.statusPagamento === 'Pago Total') corPag = "bg-emerald-50 text-emerald-700";
+
+        tbodyEncomendas.innerHTML += `
+          <tr class="${enc.concluida ? 'bg-gray-100 opacity-60 line-through' : 'hover:bg-gray-50'} transition align-top">
+            <td class="p-3 pt-4">
+              <input type="checkbox" ${enc.concluida ? 'checked' : ''} onclick="mudarStatus('${enc.id}')" class="w-4 h-4 text-indigo-600 rounded cursor-pointer">
+            </td>
+            <td class="p-3 pt-4 font-medium text-gray-900">${cliente.nome}</td>
+            <td class="p-3 pt-4">
+              <a href="https://wa.me/55${whatsLimpo}?text=${msgWhats}" target="_blank" class="text-emerald-600 hover:underline flex items-center gap-1 font-medium">
+                💬 ${cliente.whatsapp}
+              </a>
+            </td>
+            <td class="p-3 py-3">${listaProdutosHtml}</td>
+            <td class="p-3 pt-4">
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${corPag}">${enc.statusPagamento || 'Pendente'}</span>
+            </td>
+            <td class="p-3 pt-4 text-xs text-gray-500">
+              <div>Entrada: ${enc.dataEntrada.split('-').reverse().join('/')}</div>
+              <div class="font-semibold text-indigo-600 mt-1">Entrega: ${enc.dataEntrega.split('-').reverse().join('/')}</div>
+            </td>
+            <td class="p-3 pt-4 text-center">
+              <button onclick="deletarEncomenda('${enc.id}')" title="Excluir" class="text-red-500 hover:text-red-700 text-xs bg-red-50 px-2 py-1 rounded">Excluir</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function abrirHistorico(clienteId) {
+      const cliente = clientesGlobal.find(c => c.id === clienteId);
+      const compras = encomendasGlobal.filter(e => e.clienteId === clienteId);
+
+      document.getElementById('modal-titulo-cliente').innerText = `Histórico de: ${cliente.nome}`;
+      const container = document.getElementById('modal-conteudo-historico');
+      container.innerHTML = '';
+
+      if (compras.length === 0) {
+        container.innerHTML = `<p class="text-gray-400 text-center py-4">Este cliente ainda não possui encomendas registradas.</p>`;
+      } else {
+        compras.forEach(compra => {
+          const itensStr = compra.itens.map(i => `${i.produto} (x${i.quantidade})`).join(', ');
+          container.innerHTML += `
+            <div class="p-3 border rounded-lg bg-gray-50 text-sm space-y-1">
+              <div class="flex justify-between font-semibold text-gray-700">
+                <span>Entrega: ${compra.dataEntrega.split('-').reverse().join('/')}</span>
+                <span class="${compra.concluida ? 'text-emerald-600' : 'text-amber-600'}">${compra.concluida ? 'Concluída' : 'Em Preparo'}</span>
+              </div>
+              <div class="text-gray-600"><strong>Itens:</strong> ${itensStr}</div>
+              <div class="text-xs text-gray-500">Pagamento: ${compra.statusPagamento}</div>
+            </div>
+          `;
+        });
+      }
+
+      document.getElementById('modal-historico').classList.remove('hidden');
+    }
+
+    function fecharHistorico() {
+      document.getElementById('modal-historico').classList.add('hidden');
+    }
+
+    document.getElementById('form-cliente').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('cli-nome').value;
+      const whatsapp = document.getElementById('cli-whats').value;
+      const aniversario = document.getElementById('cli-nasc').value;
+
+      await fetch('/api/clientes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, whatsapp, aniversario })
+      });
+
+      document.getElementById('form-cliente').reset();
+      carregarDados();
+      alert('Cliente cadastrado com sucesso!');
+    });
+
+    async function deletarCliente(id) {
+      if (confirm('Deseja excluir este cliente?')) {
+        await fetch(`/api/clientes/${id}`, { method: 'DELETE' });
+        carregarDados();
+      }
+    }
+
+    document.getElementById('form-encomenda').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const clienteId = document.getElementById('enc-cliente').value;
+      const statusPagamento = document.getElementById('enc-pagamento').value;
+      const dataEntrada = document.getElementById('enc-entrada').value;
+      const dataEntrega = document.getElementById('enc-entrega').value;
+
+      const itens = [];
+      document.querySelectorAll('.produto-item').forEach(itemDiv => {
+        const categoria = itemDiv.querySelector('.prod-cat').value;
+        const produto = itemDiv.querySelector('.prod-nome').value;
+        const quantidade = itemDiv.querySelector('.prod-qtd').value;
+        const obs = itemDiv.querySelector('.prod-obs').value;
+        if (produto) {
+          itens.push({ categoria, produto, quantidade: Number(quantidade), obs });
+        }
+      });
+
+      if (itens.length === 0) {
+        alert('Adicione pelo menos um produto na encomenda.');
+        return;
+      }
+
+      await fetch('/api/encomendas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clienteId, itens, dataEntrada, dataEntrega, statusPagamento })
+      });
+
+      document.getElementById('form-encomenda').reset();
+      document.getElementById('container-produtos').innerHTML = '';
+      adicionarCampoProduto();
+      carregarDados();
+    });
+
+    async function mudarStatus(id) {
+      await fetch(`/api/encomendas/${id}/toggle`, { method: 'PATCH' });
+      carregarDados();
+    }
+
+    async function deletarEncomenda(id) {
+      if (confirm('Deseja realmente excluir esta encomenda?')) {
+        await fetch(`/api/encomendas/${id}`, { method: 'DELETE' });
+        carregarDados();
+      }
+    }
+  </script>
+</body>
+</html>

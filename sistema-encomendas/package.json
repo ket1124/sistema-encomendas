@@ -1,0 +1,13 @@
+{
+  "name": "sistema-encomendas",
+  "version": "1.0.0",
+  "description": "Sistema web de encomendas e clientes",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "lowdb": "^1.0.0"
+  }
+}
